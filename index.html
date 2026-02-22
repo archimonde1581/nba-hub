@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBA HUB — 赛事中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@300;400;700&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C8102E;
+    --gold: #FDB927;
+    --dark: #0a0a0f;
+    --surface: #111118;
+    --card: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8f0;
+    --muted: #6a6a80;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(200,16,46,0.5);
+  }
+
+  .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: #fff;
+  }
+
+  .logo-text span {
+    color: var(--gold);
+  }
+
+  nav {
+    display: flex;
+    gap: 8px;
+  }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  nav button:hover, nav button.active {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+  }
+
+  nav button.active {
+    color: var(--gold);
+    border-bottom: 2px solid var(--gold);
+    border-radius: 4px 4px 0 0;
+  }
+
+  .live-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #ff4444;
+    text-transform: uppercase;
+  }
+
+  .live-dot::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: #ff4444;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* HERO SECTION */
+  .hero {
+    position: relative;
+    padding: 60px 40px 40px;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(200,16,46,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 0.9;
+    letter-spacing: 4px;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+
+  .hero-title em {
+    color: var(--gold);
+    font-style: normal;
+  }
+
+  .hero-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 1px;
+    max-width: 400px;
+    line-height: 1.8;
+  }
+
+  /* DATE BAR */
+  .date-bar {
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .date-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .date-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: 0.3;
+  }
+
+  /* MAIN LAYOUT */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 0;
+    padding: 0 40px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .content-area {
+    border-right: 1px solid var(--border);
+    padding-right: 40px;
+    padding-top: 32px;
+  }
+
+  .sidebar {
+    padding-left: 40px;
+    padding-top: 32px;
+  }
+
+  /* SECTION HEADERS */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section-count {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--red);
+    background: rgba(200,16,46,0.1);
+    border: 1px solid rgba(200,16,46,0.2);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* GAME CARDS */
+  .games-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .game-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    animation: fadeSlideIn 0.4s ease backwards;
+  }
+
+  .game-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .game-card.winner-home::before { background: var(--gold); }
+  .game-card.winner-away::before { background: var(--red); }
+  .game-card.upcoming::before { background: linear-gradient(180deg, var(--gold), var(--red)); }
+
+  .game-card:hover {
+    border-color: rgba(255,255,255,0.15);
+    transform: translateX(4px);
+    background: #1e1e2c;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .team-side {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .team-side.right { text-align: right; }
+
+  .team-abbr {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .team-name {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .score-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 100px;
+  }
+
+  .score-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  .score-display .score-sep {
+    color: var(--muted);
+    margin: 0 4px;
+  }
+
+  .score-status {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .game-time {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .win-prob-bar {
+    display: flex;
+    height: 3px;
+    border-radius: 2px;
+    overflow: hidden;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .win-prob-home {
+    background: var(--gold);
+    transition: width 0.8s ease;
+  }
+
+  .win-prob-away {
+    background: var(--red);
+    flex: 1;
+  }
+
+  .win-prob-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+
+  .score-sep-colon {
+    color: rgba(255,255,255,0.3);
+    margin: 0 2px;
+  }
+
+  .winner-score {
+    color: var(--gold) !important;
+  }
+
+  /* NEWS CARDS */
+  .news-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .news-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    animation: fadeSlideIn 0.5s ease backwards;
+  }
+
+  .news-card:hover {
+    border-color: rgba(255,255,255,0.15);
+    background: #1e1e2c;
+  }
+
+  .news-tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+
+  .tag-hot { color: var(--red); background: rgba(200,16,46,0.1); border: 1px solid rgba(200,16,46,0.2); }
+  .tag-trade { color: #4a9eff; background: rgba(74,158,255,0.1); border: 1px solid rgba(74,158,255,0.2); }
+  .tag-injury { color: #ff9900; background: rgba(255,153,0,0.1); border: 1px solid rgba(255,153,0,0.2); }
+  .tag-analysis { color: #44dd88; background: rgba(68,221,136,0.1); border: 1px solid rgba(68,221,136,0.2); }
+
+  .news-headline {
+    font-family: 'Oswald', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .news-excerpt {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  .news-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+  }
+
+  .news-meta-sep { opacity: 0.3; }
+
+  /* SIDEBAR - STANDINGS */
+  .standings-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .standings-table th {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 8px 4px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .standings-table th:first-child { text-align: left; }
+
+  .standings-table td {
+    padding: 10px 4px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    text-align: right;
+  }
+
+  .standings-table td:first-child { text-align: left; }
+
+  .standings-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .rank-num {
+    font-family: 'Oswald', sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+    margin-right: 8px;
+    width: 16px;
+    display: inline-block;
+    text-align: right;
+  }
+
+  .team-full {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .standings-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    margin: 4px 0;
+    opacity: 0.4;
+  }
+
+  .conf-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    padding: 12px 4px 4px;
+    display: block;
+  }
+
+  .pct-good { color: var(--gold); }
+  .pct-bad { color: var(--muted); }
+
+  /* UPCOMING BADGE */
+  .upcoming-badge {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    background: rgba(253,185,39,0.1);
+    border: 1px solid rgba(253,185,39,0.2);
+    padding: 2px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 40px;
+  }
+
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    color: var(--muted);
+  }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* TABS CONTENT */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .content-area { border-right: none; padding-right: 0; }
+    .sidebar { padding-left: 0; border-top: 1px solid var(--border); padding-top: 32px; }
+    header { padding: 0 20px; }
+    .hero { padding: 40px 20px 30px; }
+    .date-bar { padding: 12px 20px; }
+    .main-grid { padding: 0 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">N</div>
+    <div class="logo-text">NBA <span>HUB</span></div>
+  </div>
+  <nav>
+    <button class="active">赛事</button>
+    <button>战队</button>
+    <button>球员</button>
+    <button>视频</button>
+  </nav>
+  <div class="live-dot">实时数据</div>
+</header>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-label">2025–26 NBA 常规赛</div>
+    <h1 class="hero-title">赛场<em>追踪</em><br>新闻中心</h1>
+    <p class="hero-subtitle">实时比分 · 深度分析 · 交易动态<br>全面覆盖每一场战役</p>
+  </div>
+</div>
+
+<div class="date-bar">
+  <span class="date-label">2026年2月22日 · 今日赛程</span>
+  <div class="date-line"></div>
+  <span style="font-size:12px;color:var(--muted);font-family:'Oswald',sans-serif;letter-spacing:2px;">周日</span>
+</div>
+
+<div class="main-grid">
+  <div class="content-area">
+    
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('scores')">比分</button>
+      <button class="tab" onclick="switchTab('upcoming')">即将开始</button>
+      <button class="tab" onclick="switchTab('news')">新闻</button>
+    </div>
+
+    <!-- SCORES TAB -->
+    <div class="tab-content active" id="tab-scores">
+      <div class="section-header">
+        <span class="section-title">昨日战报</span>
+        <div class="section-line"></div>
+        <span class="section-count">10场</span>
+      </div>
+      <div class="games-grid" id="finished-games"></div>
+    </div>
+
+    <!-- UPCOMING TAB -->
+    <div class="tab-content" id="tab-upcoming">
+      <div class="section-header">
+        <span class="section-title">今日赛程</span>
+        <div class="section-line"></div>
+        <span class="section-count">5场</span>
+      </div>
+      <div class="games-grid" id="upcoming-games"></div>
+    </div>
+
+    <!-- NEWS TAB -->
+    <div class="tab-content" id="tab-news">
+      <div class="section-header">
+        <span class="section-title">今日头条</span>
+        <div class="section-line"></div>
+      </div>
+      <div class="news-grid" id="news-feed"></div>
+    </div>
+
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="section-header">
+      <span class="section-title">积分榜</span>
+      <div class="section-line"></div>
+    </div>
+
+    <!-- EAST -->
+    <span class="conf-label">东部联盟</span>
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th>球队</th>
+          <th>胜</th>
+          <th>负</th>
+          <th>胜率</th>
+        </tr>
+      </thead>
+      <tbody id="east-standings"></tbody>
+    </table>
+
+    <div style="height:24px"></div>
+
+    <!-- WEST -->
+    <span class="conf-label">西部联盟</span>
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th>球队</th>
+          <th>胜</th>
+          <th>负</th>
+          <th>胜率</th>
+        </tr>
+      </thead>
+      <tbody id="west-standings"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">NBA HUB</div>
+  <div class="footer-note">数据来源 · SportRadar · 实时更新</div>
+</footer>
+
+<script>
+// ============ DATA ============
+const finishedGames = [
+  { home: 'NOP', homeFull: '鹈鹕', away: 'MIL', awayFull: '雄鹿', homeScore: 118, awayScore: 139 },
+  { home: 'OKC', homeFull: '雷霆', away: 'BKN', awayFull: '篮网', homeScore: 105, awayScore: 86 },
+  { home: 'POR', homeFull: '开拓者', away: 'DEN', awayFull: '掘金', homeScore: 103, awayScore: 157 },
+  { home: 'LAL', homeFull: '湖人', away: 'LAC', awayFull: '快船', homeScore: 125, awayScore: 122 },
+  { home: 'PHX', homeFull: '太阳', away: 'ORL', awayFull: '魔术', homeScore: 113, awayScore: 110 },
+  { home: 'NOP', homeFull: '鹈鹕', away: 'PHI', awayFull: '76人', homeScore: 126, awayScore: 111 },
+  { home: 'SAS', homeFull: '马刺', away: 'SAC', awayFull: '国王', homeScore: 139, awayScore: 122 },
+  { home: 'MIA', homeFull: '热火', away: 'MEM', awayFull: '灰熊', homeScore: 136, awayScore: 120 },
+  { home: 'CHI', homeFull: '公牛', away: 'DET', awayFull: '活塞', homeScore: 110, awayScore: 126 },
+  { home: 'NYK', homeFull: '尼克斯', away: 'HOU', awayFull: '火箭', homeScore: 108, awayScore: 106 },
+];
+
+const upcomingGames = [
+  { home: 'OKC', homeFull: '雷霆', away: 'CLE', awayFull: '骑士', homeProb: 41.6, awayProb: 58.4, time: '02:00 AM' },
+  { home: 'MIL', homeFull: '雄鹿', away: 'TOR', awayFull: '猛龙', homeProb: 43, awayProb: 57, time: '04:30 AM' },
+  { home: 'ATL', homeFull: '老鹰', away: 'BKN', awayFull: '篮网', homeProb: 76.7, awayProb: 23.3, time: '04:30 AM' },
+  { home: 'GSW', homeFull: '勇士', away: 'DEN', awayFull: '掘金', homeProb: 33.9, awayProb: 66.1, time: '04:30 AM' },
+  { home: 'IND', homeFull: '步行者', away: 'DAL', awayFull: '独行侠', homeProb: 46.8, awayProb: 53.2, time: '06:00 AM' },
+];
+
+const news = [
+  {
+    tag: 'hot', tagText: '热点',
+    headline: '活塞42胜13负领跑东部，Cade Cunningham MVP呼声高涨',
+    excerpt: '底特律活塞本赛季表现令人瞩目，以42胜13负的战绩高居东部榜首，Cade Cunningham场均28.3分7.1篮板8.2助攻，成为MVP最有力竞争者之一。',
+    time: '2小时前', source: 'ESPN'
+  },
+  {
+    tag: 'analysis', tagText: '分析',
+    headline: '掘金157分大爆发：球队进攻体系为何如此高效？',
+    excerpt: '昨晚掘金客场大胜开拓者157比103，球队在尼古拉·约基奇的统领下呈现出令人窒息的进攻效率，三分命中率高达48.3%，让全联盟侧目。',
+    time: '3小时前', source: 'The Athletic'
+  },
+  {
+    tag: 'trade', tagText: '交易',
+    headline: '交易截止日临近：多支球队积极寻求补强，湖人动作备受关注',
+    excerpt: '交易截止日仅剩数天，湖人、勇士、76人等强队均在积极洽谈引援事宜。据悉湖人有意寻求一名侧翼球员以应对西部竞争压力。',
+    time: '5小时前', source: 'NBA官方'
+  },
+  {
+    tag: 'hot', tagText: '热点',
+    headline: '雷霆遭受本赛季第14败，OKC战略布局引发争议',
+    excerpt: '昨晚雷霆主场不敌篮网，本赛季已录得14败。分析人士指出，雷霆需要在季后赛冲刺阶段更好地激活板凳深度，方能在西部立足。',
+    time: '6小时前', source: 'Bleacher Report'
+  },
+  {
+    tag: 'injury', tagText: '伤情',
+    headline: '今日伤情报告：多名主力状态存疑，影响赛前赔率',
+    excerpt: '今日将进行的五场比赛中，多名关键球员伤情存疑。骑士对阵雷霆一役中，骑士中锋状态将直接影响今晚的胜负走势，赔率出现明显波动。',
+    time: '8小时前', source: '伤情追踪'
+  },
+];
+
+const eastTeams = [
+  { name: '底特律活塞', w: 42, l: 13, pct: 0.764 },
+  { name: '波士顿凯尔特人', w: 36, l: 19, pct: 0.655 },
+  { name: '纽约尼克斯', w: 36, l: 21, pct: 0.632 },
+  { name: '克利夫兰骑士', w: 36, l: 21, pct: 0.632 },
+  { name: '多伦多猛龙', w: 33, l: 23, pct: 0.589 },
+  { name: '费城76人', w: 30, l: 26, pct: 0.536 },
+  { name: '迈阿密热火', w: 31, l: 27, pct: 0.534 },
+  { name: '奥兰多魔术', w: 29, l: 26, pct: 0.527 },
+  { name: '亚特兰大老鹰', w: 27, l: 31, pct: 0.466 },
+  { name: '夏洛特黄蜂', w: 26, l: 31, pct: 0.456 },
+];
+
+const westTeams = [
+  { name: '俄克拉荷马雷霆', w: 43, l: 14, pct: 0.754 },
+  { name: '圣安东尼奥马刺', w: 40, l: 16, pct: 0.714 },
+  { name: '丹佛掘金', w: 36, l: 21, pct: 0.632 },
+  { name: '明尼苏达森林狼', w: 35, l: 22, pct: 0.614 },
+  { name: '洛杉矶湖人', w: 34, l: 21, pct: 0.618 },
+  { name: '休斯顿火箭', w: 34, l: 21, pct: 0.618 },
+  { name: '菲尼克斯太阳', w: 33, l: 24, pct: 0.579 },
+  { name: '金州勇士', w: 29, l: 27, pct: 0.518 },
+  { name: '洛杉矶快船', w: 27, l: 29, pct: 0.482 },
+  { name: '波特兰开拓者', w: 27, l: 30, pct: 0.474 },
+];
+
+// ============ RENDER ============
+function renderFinishedGames() {
+  const container = document.getElementById('finished-games');
+  container.innerHTML = finishedGames.map((g, i) => {
+    const homeWin = g.homeScore > g.awayScore;
+    const cls = homeWin ? 'winner-home' : 'winner-away';
+    const hs = homeWin ? `<span class="winner-score">${g.homeScore}</span>` : g.homeScore;
+    const as = !homeWin ? `<span class="winner-score">${g.awayScore}</span>` : g.awayScore;
+    return `
+    <div class="game-card ${cls}" style="animation-delay:${i*0.05}s">
+      <div class="team-side">
+        <div class="team-abbr">${g.home}</div>
+        <div class="team-name">${g.homeFull}</div>
+      </div>
+      <div class="score-center">
+        <div class="score-display">${hs}<span class="score-sep-colon">:</span>${as}</div>
+        <div class="score-status">已结束</div>
+      </div>
+      <div class="team-side right">
+        <div class="team-abbr">${g.away}</div>
+        <div class="team-name">${g.awayFull}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderUpcomingGames() {
+  const container = document.getElementById('upcoming-games');
+  container.innerHTML = upcomingGames.map((g, i) => {
+    return `
+    <div class="game-card upcoming" style="animation-delay:${i*0.07}s">
+      <div class="team-side">
+        <div class="team-abbr">${g.home}</div>
+        <div class="team-name">${g.homeFull}</div>
+      </div>
+      <div class="score-center">
+        <span class="upcoming-badge">即将开始</span>
+        <div class="game-time">${g.time}</div>
+        <div class="win-prob-bar">
+          <div class="win-prob-home" style="width:${g.homeProb}%"></div>
+          <div class="win-prob-away"></div>
+        </div>
+        <div class="win-prob-label">
+          <span>${g.homeProb}%</span>
+          <span>胜率</span>
+          <span>${g.awayProb}%</span>
+        </div>
+      </div>
+      <div class="team-side right">
+        <div class="team-abbr">${g.away}</div>
+        <div class="team-name">${g.awayFull}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderNews() {
+  const container = document.getElementById('news-feed');
+  container.innerHTML = news.map((n, i) => `
+    <div class="news-card" style="animation-delay:${i*0.07}s">
+      <span class="news-tag tag-${n.tag}">${n.tagText}</span>
+      <div class="news-headline">${n.headline}</div>
+      <div class="news-excerpt">${n.excerpt}</div>
+      <div class="news-meta">
+        <span>${n.time}</span>
+        <span class="news-meta-sep">·</span>
+        <span>${n.source}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStandings(teams, elId) {
+  const tbody = document.getElementById(elId);
+  tbody.innerHTML = teams.map((t, i) => {
+    const pctClass = t.pct >= 0.5 ? 'pct-good' : 'pct-bad';
+    return `<tr>
+      <td><span class="rank-num">${i+1}</span><span class="team-full">${t.name}</span></td>
+      <td>${t.w}</td>
+      <td>${t.l}</td>
+      <td class="${pctClass}">.${String(Math.round(t.pct*1000)).padStart(3,'0')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// INIT
+renderFinishedGames();
+renderUpcomingGames();
+renderNews();
+renderStandings(eastTeams, 'east-standings');
+renderStandings(westTeams, 'west-standings');
+</script>
+
+</body>
+</html>
